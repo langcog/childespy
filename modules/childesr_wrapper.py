@@ -55,18 +55,21 @@ def convert_r_to_py(r_input):
 ### function conversion ###
 
 #translate_version - not a callable function in the R script, not needed here?
-def translate_version(db_version, db_args, db_info):
-    return(childesr.translate_version(db_version, db_args, db_info))
+#def translate_version(db_version, db_args, db_info):
+#    return(childesr.translate_version(db_version, db_args, db_info))
 
 #resolve connection - not a callable function in the R script, not needed here?
-def resolve_connection(connection, db_version = None, db_args = None):
-    db_version = convert_null(db_version)
-    db_args = convert_null(db_args)
-    r_connection = childesr.resolve_connection(connection, db_version, db_args)
-    return(r_connection)
+#def resolve_connection(connection, db_version = None, db_args = None):
+#    db_version = convert_null(db_version)
+#    db_args = convert_null(db_args)
+#    r_connection = childesr.resolve_connection(connection, db_version, db_args)
+#    return(r_connection)
 
 #get db info
 def get_db_info():
+    '''
+    Returns a dictionary with the most recent database info from childes
+    '''
     r_db_info = childesr.get_db_info()
     db_dict = dict(zip(r_db_info.names, map(list,list(r_db_info))))
     return db_dict
@@ -74,25 +77,57 @@ def get_db_info():
 #connect to childes
 # note: this returns an R 'MySQLConnection' object, no python equivalent
 def connect_to_childes(db_version = "current", db_args = None):
+    """Connects to childes-db
+
+    Args:
+        db_version: String of the name of the database version to use (default "current")
+        db_args: Dict with host, user, and password defined (default None)
+
+    Returns:
+        An R MySQLConnection object connection
+    """
     db_args = convert_null(db_args)
     return(childesr.connect_to_childes(db_version, db_args))
 
 #check_connection
 def check_connection(db_version = "current", db_args = None):
+    '''
+    Check if connecting to childes db is possible
+
+    Args:
+        db_version: String of the name of the database version to use (default "current")
+        db_args: Dict with host, user, and password defined (default None)
+
+    Returns:
+        Boolean indicating whether a connection was successfully formed
+    '''
     db_args = convert_null(db_args)
     return(childesr.check_connection(db_version, db_args)[0])
 
 #clear_connections
 def clear_connections():
+    '''
+    Clear all MySQL connections
+    '''
     return(childesr.clear_connections())
 
 #get_table - not callable from chilesr, not needed here?
-def get_table(connection, name):
-    return(childesr.get_table(connection, name))
+#def get_table(connection, name):
+#    return(childesr.get_table(connection, name))
 
 #get_collections
-def get_collections(connection = None, db_version = "current",
-                            db_args = None):
+def get_collections(connection = None, db_version = "current", db_args = None):
+    '''
+    Get the collections from childesdb
+
+    Args:
+        connection: A connection to the CHILDES database (default None)
+        db_version: String of the name of the database version to use (default "current")
+        db_args: Dict with host, user, and password defined (default None)
+
+    Returns:
+        A pandas dataframe of Collection data. If `connection` is supplied, the result remains a remote query, otherwise it is retrieved locally.
+    '''
     connection = convert_null(connection)
     db_args = convert_null(db_args)
     collections = childesr.get_collections(connection, db_version, db_args)
@@ -101,6 +136,17 @@ def get_collections(connection = None, db_version = "current",
 
 #get_corpora
 def get_corpora(connection = None, db_version = "current", db_args = None):
+    '''
+    Get the corpora data
+
+    Args:
+        connection: A connection to the CHILDES database (default None)
+        db_version: String of the name of the database version to use (default "current")
+        db_args: Dict with host, user, and password defined (default None)
+
+    Returns:
+        A pandas dataframe of Corpus data. If `connection` is supplied, the result remains a remote query, otherwise it is retrieved locally.
+    '''
     #convert arguments
     connection = convert_null(connection)
     db_args = convert_null(db_args)
@@ -112,6 +158,20 @@ def get_corpora(connection = None, db_version = "current", db_args = None):
 #get_transcripts
 def get_transcripts(collection = None, corpus= None, target_child=None,
 connection= None, db_version = "current", db_args = None):
+    '''
+    Gets the transcripts with supplied filters
+
+    Args:
+        collection: A string or list of strings of one or more names of collections (default None)
+        corpus: A string or list of strings of one or more names of corpora (default None)
+        target_child: A string or list of strings of one or more names of children (default None)
+        connection: A connection to the CHILDES database (default None)
+        db_version: String of the name of the database version to use (default "current")
+        db_args: Dict with host, user, and password defined (default None)
+
+    Returns:
+    A pandas dataframe of Transcript data, filtered down by supplied arguments. If `connection` is supplied, the result remains a remote query, otherwise it is retrieved locally.
+    '''
     # convert base
     connection = convert_null(connection)
     db_args = convert_null(db_args)
@@ -130,6 +190,24 @@ connection= None, db_version = "current", db_args = None):
 def get_participants(collection = None, corpus = None, target_child = None,
                     role = None, role_exclude = None, age = None, sex = None,
                     connection = None, db_version = "current", db_args = None):
+    '''
+    Gets the participant data filtered by the supplied arguments
+
+    Args:
+        collection: A string or list of strings of one or more names of collections (default None)
+        corpus: A string or list of strings of one or more names of corpora (default None)
+        target_child: A string or list of strings of one or more names of children (default None)
+        role: A string or list of strings of one or more roles to include (default None)
+        role_exclude: A string or list of strings of one or more roles to exclude (default None)
+        age: An int or float of an single age value or a list of ints or floats with min age value (inclusive) and max age value (exclusive) in months. For a single age value, participants are returned for which that age is within their age range; for two ages, participants are returned for whose age overlaps with the interval between those two ages. (default None)
+        sex: A string of values "male" and/or "female" (default None)
+        connection: A connection to the CHILDES database (default None)
+        db_version: String of the name of the database version to use (default "current")
+        db_args: Dict with host, user, and password defined (default None)
+
+    Returns:
+    A pandas dataframe of Participant data, filtered down by supplied arguments. If `connection` is supplied, the result remains a remote query, otherwise it is retrieved locally.
+    '''
     # convert base
     connection = convert_null(connection)
     db_args = convert_null(db_args)
@@ -153,6 +231,24 @@ def get_participants(collection = None, corpus = None, target_child = None,
 def get_speaker_statistics(collection = None, corpus = None, target_child = None,
                             role = None, role_exclude = None, age = None, sex = None,
                             connection = None, db_version = "current", db_args = None):
+    '''
+    Gets the speaker data filtered by the supplied arguments
+
+    Args:
+        collection: A string or list of strings of one or more names of collections (default None)
+        corpus: A string or list of strings of one or more names of corpora (default None)
+        target_child: A string or list of strings of one or more names of children (default None)
+        role: A string or list of strings of one or more roles to include (default None)
+        role_exclude: A string or list of strings of one or more roles to exclude (default None)
+        age: An int or float of an single age value or a list of ints or floats with min age value (inclusive) and max age value (exclusive) in months. For a single age value, participants are returned for which that age is within their age range; for two ages, participants are returned for whose age overlaps with the interval between those two ages. (default None)
+        sex: A string of values "male" and/or "female" (default None)
+        connection: A connection to the CHILDES database (default None)
+        db_version: String of the name of the database version to use (default "current")
+        db_args: Dict with host, user, and password defined (default None)
+
+    Returns:
+    A pandas dataframe of Speaker statistics data, filtered down by supplied arguments. If `connection` is supplied, the result remains a remote query, otherwise it is retrieved locally.
+    '''
     # convert base
     connection = convert_null(connection)
     db_args = convert_null(db_args)
@@ -180,6 +276,28 @@ def get_tokens(token, collection = None, language = None, corpus = None,
                 age = None, sex = None, stem = None,
                 part_of_speech = None, replace = True, connection = None,
                 db_version = "current", db_args = None):
+    '''
+    Gets the token data filtered by the supplied arguments
+
+    Args:
+        token: A string or list of strings of one or more token patterns (`\%` matches any number of wildcard characters, `_` matches exactly one wildcard character)
+        collection: A string or list of strings of one or more names of collections (default None)
+        language: A string or list of strings of one or more languages (default None)
+        corpus: A string or list of strings of one or more names of corpora (default None)
+        target_child: A string or list of strings of one or more names of children (default None)
+        role: A string or list of strings of one or more roles to include (default None)
+        role_exclude: A string or list of strings of one or more roles to exclude (default None)
+        age: An int or float of an single age value or a list of ints or floats with min age value (inclusive) and max age value (exclusive) in months. For a single age value, participants are returned for which that age is within their age range; for two ages, participants are returned for whose age overlaps with the interval between those two ages. (default None)
+        sex: A string of values "male" and/or "female" (default None)
+        part_of_speech: A string or list of strings of one or more parts of speech (default None)
+        replace: A boolean indicating whether to replace "gloss" with "replacement" (i.e. phonologically assimilated form), when available (default True)
+        connection: A connection to the CHILDES database (default None)
+        db_version: String of the name of the database version to use (default "current")
+        db_args: Dict with host, user, and password defined (default None)
+
+    Returns:
+    A pandas dataframe of Token data, filtered down by supplied arguments. If `connection` is supplied, the result remains a remote query, otherwise it is retrieved locally.
+    '''
 
     connection = convert_null(connection)
     db_args = convert_null(db_args)
@@ -210,6 +328,26 @@ def get_types(collection = None, language = None, corpus = None,
                            role = None, role_exclude = None, age = None,
                            sex = None, target_child = None, type = None, connection = None,
                            db_version = "current", db_args = None):
+    '''
+    Gets the token data filtered by the supplied arguments
+
+    Args:
+        type: A string or list of strings of one or more type patterns (`%` matches any number of wildcard characters, `_` matches exactly one wildcard character)
+        collection: A string or list of strings of one or more names of collections (default None)
+        language: A string or list of strings of one or more languages (default None)
+        corpus: A string or list of strings of one or more names of corpora (default None)
+        target_child: A string or list of strings of one or more names of children (default None)
+        role: A string or list of strings of one or more roles to include (default None)
+        role_exclude: A string or list of strings of one or more roles to exclude (default None)
+        age: An int or float of an single age value or a list of ints or floats with min age value (inclusive) and max age value (exclusive) in months. For a single age value, participants are returned for which that age is within their age range; for two ages, participants are returned for whose age overlaps with the interval between those two ages. (default None)
+        sex: A string of values "male" and/or "female" (default None)
+        connection: A connection to the CHILDES database (default None)
+        db_version: String of the name of the database version to use (default "current")
+        db_args: Dict with host, user, and password defined (default None)
+
+    Returns:
+    A pandas dataframe of Type data, filtered down by supplied arguments. If `connection` is supplied, the result remains a remote query, otherwise it is retrieved locally.
+    '''
 
     connection = convert_null(connection)
     db_args = convert_null(db_args)
@@ -237,6 +375,25 @@ def get_utterances(collection = None, language = None, corpus = None,
                            role = None, role_exclude = None, age = None,
                            sex = None, target_child = None, connection = None,
                            db_version = "current", db_args = None):
+    '''
+    Gets the utterance data filtered by the supplied arguments
+
+    Args:
+        collection: A string or list of strings of one or more names of collections (default None)
+        language: A string or list of strings of one or more languages (default None)
+        corpus: A string or list of strings of one or more names of corpora (default None)
+        target_child: A string or list of strings of one or more names of children (default None)
+        role: A string or list of strings of one or more roles to include (default None)
+        role_exclude: A string or list of strings of one or more roles to exclude (default None)
+        age: An int or float of an single age value or a list of ints or floats with min age value (inclusive) and max age value (exclusive) in months. For a single age value, participants are returned for which that age is within their age range; for two ages, participants are returned for whose age overlaps with the interval between those two ages. (default None)
+        sex: A string of values "male" and/or "female" (default None)
+        connection: A connection to the CHILDES database (default None)
+        db_version: String of the name of the database version to use (default "current")
+        db_args: Dict with host, user, and password defined (default None)
+
+    Returns:
+    A pandas dataframe of Type data, filtered down by supplied arguments. If `connection` is supplied, the result remains a remote query, otherwise it is retrieved locally.
+    '''
     connection = convert_null(connection)
     db_args = convert_null(db_args)
 
@@ -263,7 +420,27 @@ def get_contexts(token = None, collection=None, language=None, corpus=None,
                         window = [0,0], remove_duplicates = True,
                         connection=None, db_version = "current",
                         db_args=None):
+    '''
+    Gets the contexts surrounding a token filtered by the supplied arguments
 
+    Args:
+        collection: A string or list of strings of one or more names of collections (default None)
+        language: A string or list of strings of one or more languages (default None)
+        corpus: A string or list of strings of one or more names of corpora (default None)
+        target_child: A string or list of strings of one or more names of children (default None)
+        role: A string or list of strings of one or more roles to include (default None)
+        role_exclude: A string or list of strings of one or more roles to exclude (default None)
+        age: An int or float of an single age value or a list of ints or floats with min age value (inclusive) and max age value (exclusive) in months. For a single age value, participants are returned for which that age is within their age range; for two ages, participants are returned for whose age overlaps with the interval between those two ages. (default None)
+        sex: A string of values "male" and/or "female" (default None)
+        window: A length 2 list of integers of how many utterances before and after each utterance containing the target token to retrieve (default [0,0])
+        remove_duplicates A boolean indicating whether to remove duplicate utterances from the results (default True)
+        connection: A connection to the CHILDES database (default None)
+        db_version: String of the name of the database version to use (default "current")
+        db_args: Dict with host, user, and password defined (default None)
+
+    Returns:
+    A pandas dataframe of Type data, filtered down by supplied arguments. If `connection` is supplied, the result remains a remote query, otherwise it is retrieved locally.
+    '''
     connection = convert_null(connection)
     db_args = convert_null(db_args)
 
@@ -291,6 +468,14 @@ def get_contexts(token = None, collection=None, language=None, corpus=None,
     return(r_contexts)
 #get_database_version
 def get_database_version(connection = None, db_version = "current", db_args = None):
+    '''
+    Gets the database version name as a string
+
+    Args:
+        connection: A connection to the CHILDES database (default None)
+        db_version: String of the name of the database version to use (default "current")
+        db_args: Dict with host, user, and password defined (default None)
+    '''
     connection = convert_null(connection)
     db_args = convert_null(db_args)
     return(childesr.get_database_version(connection, db_version,db_args)[0])
