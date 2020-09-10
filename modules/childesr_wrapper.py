@@ -2,10 +2,12 @@
 
 #import rpy2 objects and interface
 from rpy2 import rinterface
+from rpy2 import rinterface_lib as r_lib
 from rpy2.robjects.vectors import StrVector, FloatVector, BoolVector
 
 #activate r dataframe to pandas conversion
 from rpy2.robjects import pandas2ri
+import numpy as np
 pandas2ri.activate()
 
 #install childesr if not installed and then import
@@ -45,6 +47,11 @@ def convert_r_vector(python_input):
         r_vec = FloatVector([python_input])
     return(r_vec)
 
+def convert_r_to_py(r_input):
+    if isinstance(r_input, r_lib.sexp.NACharacterType):
+        return(None)
+    else:
+        return(r_input)
 ### function conversion ###
 
 #translate_version - not a callable function in the R script, not needed here?
@@ -89,6 +96,7 @@ def get_collections(connection = None, db_version = "current",
     connection = convert_null(connection)
     db_args = convert_null(db_args)
     collections = childesr.get_collections(connection, db_version, db_args)
+    collections = collections.apply(np.vectorize(convert_r_to_py))
     return(collections)
 
 #get_corpora
@@ -97,6 +105,8 @@ def get_corpora(connection = None, db_version = "current", db_args = None):
     connection = convert_null(connection)
     db_args = convert_null(db_args)
     r_corpora = childesr.get_corpora(connection, db_version, db_args)
+    r_corpora = r_corpora.apply(np.vectorize(convert_r_to_py))
+
     return(r_corpora)
 
 #get_transcripts
@@ -112,6 +122,8 @@ connection= None, db_version = "current", db_args = None):
     target_child = convert_r_vector(target_child)
 
     r_transcripts = childesr.get_transcripts(collection, corpus, target_child, connection, db_version,db_args)
+    r_transcripts = r_transcripts.apply(np.vectorize(convert_r_to_py))
+
     return(r_transcripts)
 
 #get_participants
@@ -133,6 +145,8 @@ def get_participants(collection = None, corpus = None, target_child = None,
 
     #get r table
     r_participants = childesr.get_participants(collection, corpus, target_child, role, role_exclude, age, sex, connection, db_version, db_args)
+    r_participants = r_participants.apply(np.vectorize(convert_r_to_py))
+
     return(r_participants)
 
 #get_speaker_statistics
@@ -154,6 +168,8 @@ def get_speaker_statistics(collection = None, corpus = None, target_child = None
 
     #get r table
     r_speaker_statistics = childesr.get_speaker_statistics(collection, corpus, target_child, role, role_exclude, age, sex, connection, db_version, db_args)
+    r_speaker_statistics = r_speaker_statistics.apply(np.vectorize(convert_r_to_py))
+
     return(r_speaker_statistics)
 
 #get_content - not in the package
@@ -186,6 +202,8 @@ def get_tokens(token, collection = None, language = None, corpus = None,
                     age, sex, token, stem,
                     part_of_speech, replace, connection,
                     db_version, db_args)
+
+    r_get_tokens = r_get_tokens.apply(np.vectorize(convert_r_to_py))
     return(r_get_tokens)
 #get_types
 def get_types(collection = None, language = None, corpus = None,
@@ -210,6 +228,8 @@ def get_types(collection = None, language = None, corpus = None,
                                role, role_exclude, age,
                                sex, target_child, type, connection,
                                db_version, db_args)
+    r_types = r_types.apply(np.vectorize(convert_r_to_py))
+
     return(r_types)
 
 #get_utterances
@@ -233,6 +253,9 @@ def get_utterances(collection = None, language = None, corpus = None,
                                role, role_exclude, age,
                                sex, target_child, connection,
                                db_version, db_args)
+    r_utterances = r_utterances.apply(np.vectorize(convert_r_to_py))
+
+    return(r_utterances)
 #get_contexts
 def get_contexts(token = None, collection=None, language=None, corpus=None,
                         role=None, role_exclude=None, age=None,
@@ -262,8 +285,10 @@ def get_contexts(token = None, collection=None, language=None, corpus=None,
                             window, remove_duplicates,
                             connection, db_version,
                             db_args)
+
+    r_contexts = r_contexts.apply(np.vectorize(convert_r_to_py))
+
     return(r_contexts)
-    
 #get_database_version
 def get_database_version(connection = None, db_version = "current", db_args = None):
     connection = convert_null(connection)
