@@ -6,7 +6,6 @@ from rpy2 import rinterface_lib as r_lib
 from rpy2.robjects.vectors import StrVector, FloatVector, BoolVector
 from rpy2.robjects.conversion import localconverter
 import rpy2.robjects as ro
-#activate r dataframe to pandas conversion
 from rpy2.robjects import pandas2ri
 import numpy as np
 pandas2ri.activate()
