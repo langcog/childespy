@@ -4,7 +4,8 @@
 from rpy2 import rinterface
 from rpy2 import rinterface_lib as r_lib
 from rpy2.robjects.vectors import StrVector, FloatVector, BoolVector
-
+from rpy2.robjects.conversion import localconverter
+import rpy2.robjects as ro
 #activate r dataframe to pandas conversion
 from rpy2.robjects import pandas2ri
 import numpy as np
@@ -52,6 +53,11 @@ def convert_r_to_py(r_input):
         return(None)
     else:
         return(r_input)
+
+def r_df_to_pandas(r_df):
+    with localconverter(ro.default_converter + pandas2ri.converter):
+        pd_from_r_df = ro.conversion.rpy2py(r_df)
+    return(pd_from_r_df)
 ### function conversion ###
 
 #translate_version - not a callable function in the R script, not needed here?
@@ -131,6 +137,7 @@ def get_collections(connection = None, db_version = "current", db_args = None):
     connection = convert_null(connection)
     db_args = convert_null(db_args)
     collections = childesr.get_collections(connection, db_version, db_args)
+    collections = r_df_to_pandas(collections)
     collections = collections.apply(np.vectorize(convert_r_to_py))
     return(collections)
 
@@ -151,6 +158,7 @@ def get_corpora(connection = None, db_version = "current", db_args = None):
     connection = convert_null(connection)
     db_args = convert_null(db_args)
     r_corpora = childesr.get_corpora(connection, db_version, db_args)
+    r_corpora = r_df_to_pandas(r_corpora)
     r_corpora = r_corpora.apply(np.vectorize(convert_r_to_py))
 
     return(r_corpora)
@@ -182,6 +190,7 @@ connection= None, db_version = "current", db_args = None):
     target_child = convert_r_vector(target_child)
 
     r_transcripts = childesr.get_transcripts(collection, corpus, target_child, connection, db_version,db_args)
+    r_transcripts = r_df_to_pandas(r_transcripts)
     r_transcripts = r_transcripts.apply(np.vectorize(convert_r_to_py))
 
     return(r_transcripts)
@@ -223,6 +232,7 @@ def get_participants(collection = None, corpus = None, target_child = None,
 
     #get r table
     r_participants = childesr.get_participants(collection, corpus, target_child, role, role_exclude, age, sex, connection, db_version, db_args)
+    r_participants = r_df_to_pandas(r_participants)
     r_participants = r_participants.apply(np.vectorize(convert_r_to_py))
 
     return(r_participants)
@@ -264,6 +274,7 @@ def get_speaker_statistics(collection = None, corpus = None, target_child = None
 
     #get r table
     r_speaker_statistics = childesr.get_speaker_statistics(collection, corpus, target_child, role, role_exclude, age, sex, connection, db_version, db_args)
+    r_speaker_statistics = r_df_to_pandas(r_speaker_statistics)
     r_speaker_statistics = r_speaker_statistics.apply(np.vectorize(convert_r_to_py))
 
     return(r_speaker_statistics)
@@ -320,7 +331,7 @@ def get_tokens(token, collection = None, language = None, corpus = None,
                     age, sex, token, stem,
                     part_of_speech, replace, connection,
                     db_version, db_args)
-
+    r_get_tokens = r_df_to_pandas(r_get_tokens)
     r_get_tokens = r_get_tokens.apply(np.vectorize(convert_r_to_py))
     return(r_get_tokens)
 #get_types
@@ -366,6 +377,7 @@ def get_types(collection = None, language = None, corpus = None,
                                role, role_exclude, age,
                                sex, target_child, type, connection,
                                db_version, db_args)
+    r_types = r_df_to_pandas(r_types)
     r_types = r_types.apply(np.vectorize(convert_r_to_py))
 
     return(r_types)
@@ -410,6 +422,7 @@ def get_utterances(collection = None, language = None, corpus = None,
                                role, role_exclude, age,
                                sex, target_child, connection,
                                db_version, db_args)
+    r_utterances = r_df_to_pandas(r_utterances)
     r_utterances = r_utterances.apply(np.vectorize(convert_r_to_py))
 
     return(r_utterances)
@@ -462,7 +475,7 @@ def get_contexts(token = None, collection=None, language=None, corpus=None,
                             window, remove_duplicates,
                             connection, db_version,
                             db_args)
-
+    r_contexts = r_df_to_pandas(r_contexts)
     r_contexts = r_contexts.apply(np.vectorize(convert_r_to_py))
 
     return(r_contexts)
