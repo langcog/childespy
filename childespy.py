@@ -59,16 +59,6 @@ def r_df_to_pandas(r_df):
     return(pd_from_r_df)
 ### function conversion ###
 
-#translate_version - not a callable function in the R script, not needed here?
-#def translate_version(db_version, db_args, db_info):
-#    return(childesr.translate_version(db_version, db_args, db_info))
-
-#resolve connection - not a callable function in the R script, not needed here?
-#def resolve_connection(connection, db_version = None, db_args = None):
-#    db_version = convert_null(db_version)
-#    db_args = convert_null(db_args)
-#    r_connection = childesr.resolve_connection(connection, db_version, db_args)
-#    return(r_connection)
 
 #get db info
 def get_db_info():
@@ -116,11 +106,6 @@ def clear_connections():
     '''
     return(childesr.clear_connections())
 
-#get_table - not callable from chilesr, not needed here?
-#def get_table(connection, name):
-#    return(childesr.get_table(connection, name))
-
-#get_collections
 def get_collections(connection = None, db_version = "current", db_args = None):
     '''
     Get the collections from childesdb
@@ -478,6 +463,7 @@ def get_contexts(token = None, collection=None, language=None, corpus=None,
     r_contexts = r_contexts.apply(np.vectorize(convert_r_to_py))
 
     return(r_contexts)
+
 #get_database_version
 def get_database_version(connection = None, db_version = "current", db_args = None):
     '''
@@ -491,3 +477,21 @@ def get_database_version(connection = None, db_version = "current", db_args = No
     connection = convert_null(connection)
     db_args = convert_null(db_args)
     return(childesr.get_database_version(connection, db_version,db_args)[0])
+
+# can impliment after childesr updated
+#def get_sql_query(sql_query_string, connection = None, db_version = "current", db_args=None):
+#    '''
+#    Run a SQL Query string on the CHILDES #database
+#    Args:
+#        sql_query_string: a tring of a SQL query
+#        connection: A connection to the CHILDES database (default None)
+#        db_version: String of the name of the database version to use (default "current")
+#        db_args: Dict with host, user, and password defined (default None)
+#    '''
+#    connection = convert_null(connection)
+#    db_args = convert_null(db_args)
+#
+#    r_sql_query = childesr.get_sql_query(sql_query_string, connection, db_version, db_args)
+#    r_sql_query = r_df_to_pandas(r_sql_query)
+#    r_sql_query = r_sql_query.apply(np.vectorize(convert_r_to_py))
+#    return(r_sql_query)
