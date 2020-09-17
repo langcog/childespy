@@ -1,4 +1,4 @@
-# A Python API for chilies-db
+# A Python API for childes-db
 
 The `childespy` package allows you to access data in the childes-db from Python. This removes the need to write complex SQL queries in order to get the information you want from the database.
 
