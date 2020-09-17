@@ -6,12 +6,11 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="childespy",
     version="0.0.1",
-    url="https://github.com/smeylan/childespy",
+    url="https://github.com/langcog/childespy",
     author="Jessica Mankewitz",
     author_email="jmank@stanford.edu",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/langcog/childespy",
     packages=setuptools.find_packages(),
     install_requires=["rpy2>=3.3.5"],
     classifiers=[
