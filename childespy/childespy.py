@@ -32,19 +32,23 @@ def convert_r_vector(python_input):
     if python_input == None:
         #if none return null
         return(rinterface.NULL)
-    if isinstance(python_input, bool):
+    if np.issubdtype(type(python_input), bool):
         r_vec = BoolVector([python_input])
-    if isinstance(python_input, list):
-        if all(isinstance(x, str) for x in python_input):
+    if np.issubdtype(type(python_input), list):
+        if all(np.issubdtype(type(x), str) for x in python_input):
             r_vec = StrVector(python_input)
-        elif all(isinstance(x, int) for x in python_input):
+        elif all(np.issubdtype(type(x), int) for x in python_input):
             r_vec = FloatVector(python_input)
-        elif all(isinstance(x, float) for x in python_input):
+        elif all(np.issubdtype(type(x), float) for x in python_input):
             r_vec = FloatVector(python_input)
-    elif isinstance(python_input, str):
+        else:
+            raise TypeError(f"Python to R conversion not lists containing mixed datatypes: {python_input}")
+    elif np.issubdtype(type(python_input), str):
         r_vec = StrVector([python_input])
-    elif isinstance(python_input, float) or isinstance(python_input, int):
+    elif np.issubdtype(type(python_input), float) or np.issubdtype(type(python_input), int):
         r_vec = FloatVector([python_input])
+    else:
+        raise TypeError(f"Python to R conversion not implemented for datatype: {type(python_input)}")
     return(r_vec)
 
 def convert_r_to_py(r_input):
