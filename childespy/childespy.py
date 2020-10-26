@@ -22,6 +22,7 @@ def importr_tryhard(packname):
         rpack = importr(packname)
     return rpack
 childesr = importr_tryhard('childesr')
+importr_tryhard('curl')
 
 ### helper functions ###
 def convert_null(conv_arg):
@@ -325,15 +326,15 @@ def get_tokens(token, collection = None, language = None, corpus = None,
     r_get_tokens = r_get_tokens.apply(np.vectorize(convert_r_to_py))
     return(r_get_tokens)
 #get_types
-def get_types(collection = None, language = None, corpus = None,
+def get_types(token_type=None, collection = None, language = None, corpus = None,
                            role = None, role_exclude = None, age = None,
-                           sex = None, target_child = None, type = None, connection = None,
+                           sex = None, target_child = None, connection = None,
                            db_version = "current", db_args = None):
     '''
     Gets the token data filtered by the supplied arguments
 
     Args:
-        type: A string or list of strings of one or more type patterns (`%` matches any number of wildcard characters, `_` matches exactly one wildcard character)
+        token_type: A string or list of strings of one or more type patterns (`%` matches any number of wildcard characters, `_` matches exactly one wildcard character)
         collection: A string or list of strings of one or more names of collections (default None)
         language: A string or list of strings of one or more languages (default None)
         corpus: A string or list of strings of one or more names of corpora (default None)
@@ -361,11 +362,11 @@ def get_types(collection = None, language = None, corpus = None,
     role_exclude = convert_r_vector(role_exclude)
     age = convert_r_vector(age)
     sex = convert_r_vector(sex)
-    type = convert_r_vector(token)
+    token_type = convert_r_vector(token_type)
 
     r_types = childesr.get_types(collection, language, corpus,
                                role, role_exclude, age,
-                               sex, target_child, type, connection,
+                               sex, target_child, token_type, connection,
                                db_version, db_args)
     r_types = r_df_to_pandas(r_types)
     r_types = r_types.apply(np.vectorize(convert_r_to_py))
@@ -459,9 +460,9 @@ def get_contexts(token = None, collection=None, language=None, corpus=None,
     window = convert_r_vector(window)
     remove_duplicates = convert_r_vector(remove_duplicates)
 
-    r_contexts = childes.get_contexts(token, collection, language, corpus,
+    r_contexts = childesr.get_contexts(collection, language, corpus,
                             role, role_exclude, age,
-                            sex, target_child,
+                            sex, target_child, token,
                             window, remove_duplicates,
                             connection, db_version,
                             db_args)
