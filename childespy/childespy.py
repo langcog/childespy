@@ -486,19 +486,19 @@ def get_database_version(connection = None, db_version = "current", db_args = No
     return(childesr.get_database_version(connection, db_version,db_args)[0])
 
 # can impliment after childesr updated
-#def get_sql_query(sql_query_string, connection = None, db_version = "current", db_args=None):
-#    '''
-#    Run a SQL Query string on the CHILDES #database
-#    Args:
-#        sql_query_string: a tring of a SQL query
-#        connection: A connection to the CHILDES database (default None)
-#        db_version: String of the name of the database version to use (default "current")
-#        db_args: Dict with host, user, and password defined (default None)
-#    '''
-#    connection = convert_null(connection)
-#    db_args = convert_r_vector(db_args)
-#
-#    r_sql_query = childesr.get_sql_query(sql_query_string, connection, db_version, db_args)
-#    r_sql_query = r_df_to_pandas(r_sql_query)
-#    r_sql_query = r_sql_query.apply(np.vectorize(convert_r_to_py))
-#    return(r_sql_query)
+def get_sql_query(sql_query_string, connection = None, db_version = "current", db_args=None):
+    '''
+    Run a SQL Query string on the CHILDES #database
+    Args:
+        sql_query_string: a string of a SQL query
+        connection: A connection to the CHILDES database (default None)
+        db_version: String of the name of the database version to use (default "current")
+        db_args: Dict with host, user, and password defined (default None)
+    '''
+    connection = convert_null(connection)
+    db_args = convert_r_vector(db_args)
+
+    r_sql_query = childesr.get_sql_query(sql_query_string, connection, db_version, db_args)
+    r_sql_query = r_df_to_pandas(r_sql_query)
+    r_sql_query = r_sql_query.apply(np.vectorize(convert_r_to_py))
+    return(r_sql_query)
