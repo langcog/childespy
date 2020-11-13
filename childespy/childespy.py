@@ -3,7 +3,7 @@
 #import rpy2 objects and interface
 from rpy2 import rinterface
 from rpy2 import rinterface_lib as r_lib
-from rpy2.robjects.vectors import StrVector, FloatVector, BoolVector
+from rpy2.robjects.vectors import StrVector, FloatVector, BoolVector, ListVector
 from rpy2.robjects.conversion import localconverter
 import rpy2.robjects as ro
 from rpy2.robjects import pandas2ri
@@ -14,14 +14,32 @@ pandas2ri.activate()
 from rpy2.robjects.packages import importr
 
 utils = importr('utils')
-def importr_tryhard(packname):
+#need remotes to install most up to data version of childesr
+# version supported for this release is 0.2.1
+
+def install_remotes():
+    try:
+        remotes = importr('remotes')
+    except:
+        utils.install_packages('remotes')
+        remotes = importr('remotes')
+    return remotes
+
+remotes = install_remotes()
+
+def importr_tryhard(packname, version=None):
     try:
         rpack = importr(packname)
     except:
-        utils.install_packages(packname)
+        if version != None:
+            utils.install_packages(packname)
+        else:
+            remotes.install_version(packname, version)
         rpack = importr(packname)
     return rpack
-childesr = importr_tryhard('childesr')
+
+childesr = importr_tryhard('childesr', '0.2.1')
+curl = importr_tryhard('curl')
 
 ### helper functions ###
 def convert_null(conv_arg):
@@ -32,19 +50,25 @@ def convert_r_vector(python_input):
     if python_input == None:
         #if none return null
         return(rinterface.NULL)
-    if isinstance(python_input, bool):
+    if np.issubdtype(type(python_input), bool):
         r_vec = BoolVector([python_input])
-    if isinstance(python_input, list):
-        if all(isinstance(x, str) for x in python_input):
+    elif np.issubdtype(type(python_input), list):
+        if type(python_input) == dict:
+            r_vec = ListVector(python_input)
+        elif all(np.issubdtype(type(x), str) for x in python_input):
             r_vec = StrVector(python_input)
-        elif all(isinstance(x, int) for x in python_input):
+        elif all(np.issubdtype(type(x), int) for x in python_input):
             r_vec = FloatVector(python_input)
-        elif all(isinstance(x, float) for x in python_input):
+        elif all(np.issubdtype(type(x), float) for x in python_input):
             r_vec = FloatVector(python_input)
-    elif isinstance(python_input, str):
+        else:
+            raise TypeError(f"Python to R conversion not lists containing mixed datatypes: {python_input}")
+    elif np.issubdtype(type(python_input), str):
         r_vec = StrVector([python_input])
-    elif isinstance(python_input, float) or isinstance(python_input, int):
+    elif np.issubdtype(type(python_input), float) or np.issubdtype(type(python_input), int):
         r_vec = FloatVector([python_input])
+    else:
+        raise TypeError(f"Python to R conversion not implemented for datatype: {type(python_input)}")
     return(r_vec)
 
 def convert_r_to_py(r_input):
@@ -81,7 +105,7 @@ def connect_to_childes(db_version = "current", db_args = None):
     Returns:
         An R MySQLConnection object connection
     """
-    db_args = convert_null(db_args)
+    db_args = convert_r_vector(db_args)
     return(childesr.connect_to_childes(db_version, db_args))
 
 #check_connection
@@ -96,7 +120,7 @@ def check_connection(db_version = "current", db_args = None):
     Returns:
         Boolean indicating whether a connection was successfully formed
     '''
-    db_args = convert_null(db_args)
+    db_args = convert_r_vector(db_args)
     return(childesr.check_connection(db_version, db_args)[0])
 
 #clear_connections
@@ -119,7 +143,7 @@ def get_collections(connection = None, db_version = "current", db_args = None):
         A pandas dataframe of Collection data. If `connection` is supplied, the result remains a remote query, otherwise it is retrieved locally.
     '''
     connection = convert_null(connection)
-    db_args = convert_null(db_args)
+    db_args = convert_r_vector(db_args)
     collections = childesr.get_collections(connection, db_version, db_args)
     collections = r_df_to_pandas(collections)
     collections = collections.apply(np.vectorize(convert_r_to_py))
@@ -140,7 +164,7 @@ def get_corpora(connection = None, db_version = "current", db_args = None):
     '''
     #convert arguments
     connection = convert_null(connection)
-    db_args = convert_null(db_args)
+    db_args = convert_r_vector(db_args)
     r_corpora = childesr.get_corpora(connection, db_version, db_args)
     r_corpora = r_df_to_pandas(r_corpora)
     r_corpora = r_corpora.apply(np.vectorize(convert_r_to_py))
@@ -166,7 +190,7 @@ connection= None, db_version = "current", db_args = None):
     '''
     # convert base
     connection = convert_null(connection)
-    db_args = convert_null(db_args)
+    db_args = convert_r_vector(db_args)
 
     # convert optional args
     collection = convert_r_vector(collection)
@@ -203,7 +227,7 @@ def get_participants(collection = None, corpus = None, target_child = None,
     '''
     # convert base
     connection = convert_null(connection)
-    db_args = convert_null(db_args)
+    db_args = convert_r_vector(db_args)
 
     #convert optional args
     collection = convert_r_vector(collection)
@@ -245,7 +269,7 @@ def get_speaker_statistics(collection = None, corpus = None, target_child = None
     '''
     # convert base
     connection = convert_null(connection)
-    db_args = convert_null(db_args)
+    db_args = convert_r_vector(db_args)
 
     #convert optional args
     collection = convert_r_vector(collection)
@@ -295,7 +319,7 @@ def get_tokens(token, collection = None, language = None, corpus = None,
     '''
 
     connection = convert_null(connection)
-    db_args = convert_null(db_args)
+    db_args = convert_r_vector(db_args)
 
     collection = convert_r_vector(collection)
     language = convert_r_vector(language)
@@ -319,15 +343,15 @@ def get_tokens(token, collection = None, language = None, corpus = None,
     r_get_tokens = r_get_tokens.apply(np.vectorize(convert_r_to_py))
     return(r_get_tokens)
 #get_types
-def get_types(collection = None, language = None, corpus = None,
+def get_types(token_type=None, collection = None, language = None, corpus = None,
                            role = None, role_exclude = None, age = None,
-                           sex = None, target_child = None, type = None, connection = None,
+                           sex = None, target_child = None, connection = None,
                            db_version = "current", db_args = None):
     '''
     Gets the token data filtered by the supplied arguments
 
     Args:
-        type: A string or list of strings of one or more type patterns (`%` matches any number of wildcard characters, `_` matches exactly one wildcard character)
+        token_type: A string or list of strings of one or more type patterns (`%` matches any number of wildcard characters, `_` matches exactly one wildcard character)
         collection: A string or list of strings of one or more names of collections (default None)
         language: A string or list of strings of one or more languages (default None)
         corpus: A string or list of strings of one or more names of corpora (default None)
@@ -345,7 +369,7 @@ def get_types(collection = None, language = None, corpus = None,
     '''
 
     connection = convert_null(connection)
-    db_args = convert_null(db_args)
+    db_args = convert_r_vector(db_args)
 
     collection = convert_r_vector(collection)
     language = convert_r_vector(language)
@@ -355,11 +379,11 @@ def get_types(collection = None, language = None, corpus = None,
     role_exclude = convert_r_vector(role_exclude)
     age = convert_r_vector(age)
     sex = convert_r_vector(sex)
-    type = convert_r_vector(token)
+    token_type = convert_r_vector(token_type)
 
     r_types = childesr.get_types(collection, language, corpus,
                                role, role_exclude, age,
-                               sex, target_child, type, connection,
+                               sex, target_child, token_type, connection,
                                db_version, db_args)
     r_types = r_df_to_pandas(r_types)
     r_types = r_types.apply(np.vectorize(convert_r_to_py))
@@ -391,7 +415,7 @@ def get_utterances(collection = None, language = None, corpus = None,
     A pandas dataframe of Type data, filtered down by supplied arguments. If `connection` is supplied, the result remains a remote query, otherwise it is retrieved locally.
     '''
     connection = convert_null(connection)
-    db_args = convert_null(db_args)
+    db_args = convert_r_vector(db_args)
 
     collection = convert_r_vector(collection)
     language = convert_r_vector(language)
@@ -439,7 +463,7 @@ def get_contexts(token = None, collection=None, language=None, corpus=None,
     A pandas dataframe of Type data, filtered down by supplied arguments. If `connection` is supplied, the result remains a remote query, otherwise it is retrieved locally.
     '''
     connection = convert_null(connection)
-    db_args = convert_null(db_args)
+    db_args = convert_r_vector(db_args)
 
     token = convert_r_vector(token)
     collection = convert_r_vector(collection)
@@ -453,9 +477,9 @@ def get_contexts(token = None, collection=None, language=None, corpus=None,
     window = convert_r_vector(window)
     remove_duplicates = convert_r_vector(remove_duplicates)
 
-    r_contexts = childes.get_contexts(token, collection, language, corpus,
+    r_contexts = childesr.get_contexts(collection, language, corpus,
                             role, role_exclude, age,
-                            sex, target_child,
+                            sex, target_child, token,
                             window, remove_duplicates,
                             connection, db_version,
                             db_args)
@@ -464,34 +488,20 @@ def get_contexts(token = None, collection=None, language=None, corpus=None,
 
     return(r_contexts)
 
-#get_database_version
-def get_database_version(connection = None, db_version = "current", db_args = None):
+# can impliment after childesr updated
+def get_sql_query(sql_query_string, connection = None, db_version = "current", db_args=None):
     '''
-    Gets the database version name as a string
-
+    Run a SQL Query string on the CHILDES #database
     Args:
+        sql_query_string: a string of a SQL query
         connection: A connection to the CHILDES database (default None)
         db_version: String of the name of the database version to use (default "current")
         db_args: Dict with host, user, and password defined (default None)
     '''
     connection = convert_null(connection)
-    db_args = convert_null(db_args)
-    return(childesr.get_database_version(connection, db_version,db_args)[0])
+    db_args = convert_r_vector(db_args)
 
-# can impliment after childesr updated
-#def get_sql_query(sql_query_string, connection = None, db_version = "current", db_args=None):
-#    '''
-#    Run a SQL Query string on the CHILDES #database
-#    Args:
-#        sql_query_string: a tring of a SQL query
-#        connection: A connection to the CHILDES database (default None)
-#        db_version: String of the name of the database version to use (default "current")
-#        db_args: Dict with host, user, and password defined (default None)
-#    '''
-#    connection = convert_null(connection)
-#    db_args = convert_null(db_args)
-#
-#    r_sql_query = childesr.get_sql_query(sql_query_string, connection, db_version, db_args)
-#    r_sql_query = r_df_to_pandas(r_sql_query)
-#    r_sql_query = r_sql_query.apply(np.vectorize(convert_r_to_py))
-#    return(r_sql_query)
+    r_sql_query = childesr.get_sql_query(sql_query_string, connection, db_version, db_args)
+    r_sql_query = r_df_to_pandas(r_sql_query)
+    r_sql_query = r_sql_query.apply(np.vectorize(convert_r_to_py))
+    return(r_sql_query)
