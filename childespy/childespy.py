@@ -14,15 +14,32 @@ pandas2ri.activate()
 from rpy2.robjects.packages import importr
 
 utils = importr('utils')
-def importr_tryhard(packname):
+#need remotes to install most up to data version of childesr
+# version supported for this release is 0.2.1
+
+def install_remotes():
+    try:
+        remotes = importr('remotes')
+    except:
+        utils.install_packages('remotes')
+        remotes = importr('remotes')
+    return remotes
+
+remotes = install_remotes()
+
+def importr_tryhard(packname, version=None):
     try:
         rpack = importr(packname)
     except:
-        utils.install_packages(packname)
+        if version != None:
+            utils.install_packages(packname)
+        else:
+            remotes.install_version(packname, version)
         rpack = importr(packname)
     return rpack
-childesr = importr_tryhard('childesr')
-importr_tryhard('curl')
+
+childesr = importr_tryhard('childesr', '0.2.1')
+curl = importr_tryhard('curl')
 
 ### helper functions ###
 def convert_null(conv_arg):
@@ -470,20 +487,6 @@ def get_contexts(token = None, collection=None, language=None, corpus=None,
     r_contexts = r_contexts.apply(np.vectorize(convert_r_to_py))
 
     return(r_contexts)
-
-#get_database_version
-def get_database_version(connection = None, db_version = "current", db_args = None):
-    '''
-    Gets the database version name as a string
-
-    Args:
-        connection: A connection to the CHILDES database (default None)
-        db_version: String of the name of the database version to use (default "current")
-        db_args: Dict with host, user, and password defined (default None)
-    '''
-    connection = convert_null(connection)
-    db_args = convert_r_vector(db_args)
-    return(childesr.get_database_version(connection, db_version,db_args)[0])
 
 # can impliment after childesr updated
 def get_sql_query(sql_query_string, connection = None, db_version = "current", db_args=None):
