@@ -13,6 +13,7 @@ pandas2ri.activate()
 #install childesr if not installed and then import
 from rpy2.robjects.packages import importr
 
+childesr_version = "0.2.1"
 utils = importr('utils')
 #need remotes to install most up to data version of childesr
 # version supported for this release is 0.2.1
@@ -31,14 +32,27 @@ def importr_tryhard(packname, version=None):
     try:
         rpack = importr(packname)
     except:
-        if version != None:
+        if version == None:
             utils.install_packages(packname)
         else:
             remotes.install_version(packname, version)
         rpack = importr(packname)
     return rpack
 
-childesr = importr_tryhard('childesr', '0.2.1')
+#check which version of childesr is/was installed
+try:
+    if str(list(utils.packageVersion("childesr")[0])).strip("[]").replace(", ", ".") != childesr_version:
+        print("Reinstalling childesr version", childesr_version)
+
+        utils.install_packages("childesr")
+        childesr = importr_tryhard("childesr")
+    else:
+        childesr = importr_tryhard("childesr")
+except:
+    print("Installing childesr...")
+    utils.install_packages("childesr")
+    childesr = importr_tryhard("childesr")
+
 curl = importr_tryhard('curl')
 
 ### helper functions ###

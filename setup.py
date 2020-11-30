@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="childespy",
-    version="1.0.0",
+    version="1.0.1",
     url="https://github.com/langcog/childespy",
     author="Jessica Mankewitz",
     author_email="jmank@stanford.edu",
