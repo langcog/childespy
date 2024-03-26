@@ -13,10 +13,10 @@ pandas2ri.activate()
 #install childesr if not installed and then import
 from rpy2.robjects.packages import importr
 
-childesr_version = "0.2.1"
+childesr_version = "0.2.3"
 utils = importr('utils')
 #need remotes to install most up to data version of childesr
-# version supported for this release is 0.2.1
+# version supported for this release is 0.2.3
 
 def install_remotes():
     try:
